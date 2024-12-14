@@ -1,0 +1,95 @@
+#VRML_SIM R2023b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/BrushedAluminium.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/picaxe/microbot/protos/Microbot.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.5802130983579946 -0.6289533324076628 0.5174654250740935 4.163991693580293
+  position -0.7901023504811505 -6.364607203604433e-05 0.5953834121223252
+}
+TexturedBackground {
+  texture "noon_cloudy_countryside"
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 3 4
+  floorAppearance PBRAppearance {
+    roughness 1
+    metalness 0
+    normalMap ImageTexture {
+      url [
+        "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/textures/parquetry/dark_strip_parquetry_normal.jpg"
+      ]
+    }
+    occlusionMap ImageTexture {
+      url [
+        "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/textures/parquetry/dark_strip_parquetry_occlusion.jpg"
+      ]
+    }
+  }
+  wallAppearance BrushedAluminium {
+    colorOverride 0 0.333333 1
+  }
+}
+Solid {
+  children [
+    Transform {
+      scale 0.01 0.01 0.01
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 0 0
+            roughness 1
+            metalness 0
+          }
+          geometry Mesh {
+            url [
+              "../protos/ElipseTrack.obj"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+  name "Elipse"
+}
+Microbot {
+  translation -0.89 0 0.022
+  extensionSlot [
+    DistanceSensor {
+      translation 0 0.01 0
+      rotation 0 1 0 1.5708003061004252
+      name "s2"
+      type "infra-red"
+    }
+    DistanceSensor {
+      rotation 0 1 0 1.5708003061004252
+      name "s3"
+      type "infra-red"
+    }
+    DistanceSensor {
+      translation 0 -0.02 0
+      rotation 0 1 0 1.5708003061004252
+      name "s5"
+      type "infra-red"
+    }
+    DistanceSensor {
+      translation 0 -0.01 0
+      rotation 0 1 0 1.5708003061004252
+      name "s4"
+      type "infra-red"
+    }
+    DistanceSensor {
+      translation 0 0.02 0
+      rotation 0 1 0 1.5708003061004252
+      name "s1"
+      type "infra-red"
+    }
+  ]
+}

@@ -1,4 +1,11 @@
+import csv
+import os
+import sys
 from controller import Robot
+
+write_data = True
+finished = False
+suppress_print = False
 
 robot = Robot()
 time_step = int(robot.getBasicTimeStep())
@@ -22,8 +29,8 @@ for name in sensor_names:
     ir_sensors.append(sensor)
 
 # PID constants
-Kp = 100  # Proportional gain
-Ki = 0.01  # Integral gain
+Kp = 80  # Proportional gain
+Ki = 0.1  # Integral gain
 Kd = 2  # Derivative gain
 
 # PID variables
@@ -31,6 +38,15 @@ integral = 0
 previous_error = 0
 
 MAX_SPEED = 6.28
+
+if write_data:
+    filename = "controle_PID.csv"
+
+    if not os.path.exists(filename):
+        with open(filename, 'w', newline='') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(['timestamp', 'erro'])
+
 
 while robot.step(time_step) != -1:
     sensor_values = [sensor.getValue() for sensor in ir_sensors]
@@ -46,16 +62,18 @@ while robot.step(time_step) != -1:
     else:
         error = previous_error
 
-    print("-"*50)
-    print("error = ", error)
-
     # PID control
     integral += error
     derivative = error - previous_error
     correction = Kp * error + Ki * integral + Kd * derivative
     previous_error = error
 
-    print("correction = ", correction)
+    if not suppress_print:
+        print("-"*50)
+        print("error = ", error)
+        print("correction = ", correction)
+        print("*="*50)
+        print("time = ", robot.getTime())
 
     left_speed = MAX_SPEED - correction
     right_speed = MAX_SPEED + correction
@@ -65,3 +83,14 @@ while robot.step(time_step) != -1:
 
     left_motor.setVelocity(left_speed)
     right_motor.setVelocity(right_speed)
+
+    finished = robot.getTime() >= 100
+
+    if write_data:
+        timestamp = robot.getTime()
+        with open(filename, 'a', newline='') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow([timestamp, error])
+    
+    if finished:
+        sys.exit(0)

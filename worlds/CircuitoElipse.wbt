@@ -72,6 +72,12 @@ Microbot {
   rotation -0.0015412093074796789 -0.0007234236749399362 0.9999985506649783 1.91858
   controller "robot"
   extensionSlot [
+    GPS {
+      translation 0 0 0
+      rotation 0 0 1 0
+      name "gps"
+      type "satellite"
+    }
     DistanceSensor {
       translation 0 0.01 0
       rotation 0 1 0 1.5708003061004252

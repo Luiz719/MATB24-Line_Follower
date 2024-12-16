@@ -42,7 +42,7 @@ previous_error = 0  # Para calcular o termo derivativo
 MAX_SPEED = 6.28
 
 if write_data:
-    filename = "controle_PID.csv"
+    filename = "controle_PD.csv"
 
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as csvfile:
@@ -102,6 +102,8 @@ while robot.step(time_step) != -1:
         with open(filename, 'a', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow([timestamp, error])
+    if finished:
+        sys.exit(0)
     
     if round(position[0],2) == round(-0.899227,2) and round(position[1],2) == round(0.00317222,2):
         left_motor.setVelocity(0.0)

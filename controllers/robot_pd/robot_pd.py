@@ -3,9 +3,8 @@ import os
 import sys
 from controller import Robot
 
-write_data = True
-finished = False
-suppress_print = False
+write_data = False
+suppress_print = True
 
 robot = Robot()
 time_step = int(robot.getBasicTimeStep())
@@ -68,17 +67,11 @@ while robot.step(time_step) != -1:
     else:  # Caso não veja nenhuma linha
         error = previous_error  # Preserva o erro anterior
 
-    # Impressão do erro para debug
-    print("-" * 50)
-    print("Error = ", error)
-
     # Controle PD
     # Aqui é necessário dividir pela diferença de tempo (time_step) para a derivada
     derivative = (error - previous_error) / (time_step / 1000.0)  # tempo em segundos
     correction = Kp * error + Kd * derivative
     previous_error = error  # Atualiza para a próxima iteração
-    
-    print("Correction = ", correction)
 
     if not suppress_print:
         print("-"*50)
@@ -102,11 +95,10 @@ while robot.step(time_step) != -1:
         with open(filename, 'a', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow([timestamp, error])
-    if finished:
-        sys.exit(0)
     
     if round(position[0],2) == round(-0.899227,2) and round(position[1],2) == round(0.00317222,2):
         left_motor.setVelocity(0.0)
         right_motor.setVelocity(0.0)
         print("Volta Completa")
-        break
+        sys.exit(0)
+

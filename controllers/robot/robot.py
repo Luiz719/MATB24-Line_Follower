@@ -5,7 +5,7 @@ from controller import Robot
 
 write_data = True
 finished = False
-suppress_print = False
+suppress_print = True
 
 robot = Robot()
 time_step = int(robot.getBasicTimeStep())
@@ -84,8 +84,8 @@ while robot.step(time_step) != -1:
     left_motor.setVelocity(left_speed)
     right_motor.setVelocity(right_speed)
 
-    finished = robot.getTime() >= 100
-
+    finished = robot.getTime() >= 85.7280
+    
     if write_data:
         timestamp = robot.getTime()
         with open(filename, 'a', newline='') as csvfile:

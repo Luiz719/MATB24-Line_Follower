@@ -3,7 +3,7 @@ import os
 import sys
 from controller import Robot
 
-write_data = True
+write_data = False
 finished = False
 suppress_print = True
 
@@ -85,7 +85,7 @@ while robot.step(time_step) != -1:
     right_motor.setVelocity(right_speed)
 
     finished = robot.getTime() >= 85.7280
-    
+
     if write_data:
         timestamp = robot.getTime()
         with open(filename, 'a', newline='') as csvfile:

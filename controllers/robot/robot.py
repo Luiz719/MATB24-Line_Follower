@@ -1,10 +1,9 @@
 import csv
 import os
-import sys
 from controller import Robot
 
 write_data = False
-#finished = False
+write_recovery_data = True  # Para escrever o segundo arquivo
 suppress_print = True
 
 robot = Robot()
@@ -19,7 +18,7 @@ right_motor.setVelocity(0)
 
 # IR sensors
 ir_sensors = []
-sensor_names = ['s1', 's2', 's3', 's4','s5']
+sensor_names = ['s1', 's2', 's3', 's4', 's5']
 
 offsets = [0.02, 0.01, 0, -0.01, -0.02]
 
@@ -27,7 +26,7 @@ for name in sensor_names:
     sensor = robot.getDevice(name)
     sensor.enable(time_step)
     ir_sensors.append(sensor)
-    
+
 gps = robot.getDevice("gps")
 gps.enable(time_step)
 
@@ -52,32 +51,43 @@ start_time = robot.getTime()  # Captura o tempo inicial
 
 MAX_SPEED = 6.28
 
+# Arquivos CSV
 if write_data:
     filename = "controle_PID.csv"
-
     if not os.path.exists(filename):
         with open(filename, 'w', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow(['timestamp', 'erro'])
-            
+
+if write_recovery_data:
+    recovery_filename = "tempo_retorno_erro.csv"
+    if not os.path.exists(recovery_filename):
+        with open(recovery_filename, 'w', newline='') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow(['timestamp_inicio', 'tempo_retorno'])
+
 # Função para calcular distância euclidiana entre duas posições
 def calculate_distance(pos1, pos2):
     return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2) ** 0.5
 
+
+# Variáveis para monitorar o tempo de retorno ao erro 0
+error_start_time = None
+is_error_active = False
 
 while robot.step(time_step) != -1:
 
     position = gps.getValues()  # Captura a posição atual do robô
     sensor_values = [sensor.getValue() for sensor in ir_sensors]
     
-    normalized_values = [(0 if value < 500 else 1) for value in sensor_values] 
+    normalized_values = [(0 if value < 500 else 1) for value in sensor_values]
 
-    error = 0  
-    if normalized_values[2] == 1:  
+    error = 0
+    if normalized_values[2] == 1:
         error = 0
-    elif 1 in normalized_values:  
+    elif 1 in normalized_values:
         first_black_index = normalized_values.index(1)
-        error = offsets[first_black_index]  
+        error = offsets[first_black_index]
     else:
         error = previous_error
 
@@ -88,10 +98,10 @@ while robot.step(time_step) != -1:
     previous_error = error
 
     if not suppress_print:
-        print("-"*50)
+        print("-" * 50)
         print("error = ", error)
         print("correction = ", correction)
-        print("*="*50)
+        print("*=" * 50)
         print("time = ", robot.getTime())
 
     left_speed = MAX_SPEED - correction
@@ -103,14 +113,24 @@ while robot.step(time_step) != -1:
     left_motor.setVelocity(left_speed)
     right_motor.setVelocity(right_speed)
 
-    #finished = robot.getTime() >= 97.7280
-
     if write_data:
         timestamp = robot.getTime()
         with open(filename, 'a', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow([timestamp, error])
-    
+
+    # Monitoramento do tempo de retorno ao erro 0
+    if error != 0:
+        if not is_error_active:  # Novo erro detectado
+            is_error_active = True
+            error_start_time = robot.getTime()
+    elif is_error_active:  # Erro voltou a 0
+        is_error_active = False
+        recovery_time = robot.getTime() - error_start_time
+        with open(recovery_filename, 'a', newline='') as csvfile:
+            csv_writer = csv.writer(csvfile)
+            csv_writer.writerow([error_start_time, recovery_time])
+
     # Verifica se a posição atual é próxima à posição inicial
     # Apenas realiza a verificação após o tempo mínimo de execução
     current_time = robot.getTime()

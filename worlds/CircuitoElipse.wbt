@@ -5,12 +5,13 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/BrushedAluminium.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/picaxe/microbot/protos/Microbot.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/traffic/protos/TrafficCone.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.062399197952096 -0.043865283154127334 -0.997086845279158 4.364292938981967
-  position -0.4225893977138834 -1.3369573155136556 0.06537797288476528
+  orientation 0.2518736550647871 -0.022168892267371152 -0.9675061767761188 3.428694557202016
+  position 0.933705929365377 -1.2579709771309533 0.9754840796648667
 }
 TexturedBackground {
   texture "noon_cloudy_countryside"
@@ -37,6 +38,11 @@ RectangleArena {
     colorOverride 0 0.333333 1
   }
 }
+TrafficCone {
+  translation -0.875 -0.98794 0
+  rotation 0 0 1 0.523598
+  scale 0.2
+}
 Solid {
   children [
     Transform {
@@ -60,23 +66,26 @@ Solid {
   name "Elipse"
 }
 Microbot {
-  hidden position_0_0 116.1254112406721
-  hidden position_0_1 109.20763736201295
+  hidden position_0_0 1327.4248820072555
+  hidden position_0_1 1242.9286543367168
   hidden translation_9 1.2142378283258592e-06 6.935056497958669e-07 -9.145131412563456e-08
   hidden rotation_9 0.021330200650560908 0.9911028164350579 0.13137819375643323 8.475809263294659e-16
-  hidden translation_10 1.1939681728717622e-06 -7.28006115613411e-07 -9.254269364711298e-08
-  hidden rotation_10 0.46610138344323854 0.4498751593584487 0.7618148340276063 2.1882861325811717e-16
+  hidden translation_10 1.1944250737916384e-06 -7.278364557716799e-07 -1.5615676934865874e-07
+  hidden rotation_10 0.05971891565852718 -0.9796894347488655 -0.19142168778385124 -1.7763568394002505e-15
+  hidden translation_11 4.544159493136135e-10 -1.736275567765233e-10 -6.361402155041773e-08
+  hidden rotation_11 -0.0508840140356225 -0.43614869173390713 -0.8984348255796988 -8.881784197001252e-16
   hidden rotation_12 0 -0.9999999999999999 0 3.028075711439537
-  hidden rotation_13 0 1 0 3.8896981672196107
-  translation -0.670027 -0.889304 0.0207168
-  rotation -0.0015412093074796789 -0.0007234236749399362 0.9999985506649783 1.91858
-  controller "robot"
+  hidden rotation_13 0 -1 0 1.0381936208832119
+  hidden rotation_14 0 -0.9999999999999999 0 2.7476616823783058
+  translation -0.674587 -0.91072 0.0216605
+  rotation 0.001312289787103493 -0.0007973290856196486 -0.9999988210802272 -2.0490245214670013
+  controller "robot_pd"
+  controllerArgs [
+    ""
+    ""
+  ]
   extensionSlot [
     GPS {
-      translation 0 0 0
-      rotation 0 0 1 0
-      name "gps"
-      type "satellite"
     }
     DistanceSensor {
       translation 0 0.01 0

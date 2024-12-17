@@ -4,7 +4,7 @@ import sys
 from controller import Robot
 
 write_data = False
-finished = False
+#finished = False
 suppress_print = True
 
 robot = Robot()
@@ -27,6 +27,17 @@ for name in sensor_names:
     sensor = robot.getDevice(name)
     sensor.enable(time_step)
     ir_sensors.append(sensor)
+    
+gps = robot.getDevice("gps")
+gps.enable(time_step)
+
+# Aguarda até que o GPS forneça uma posição inicial válida
+start_position = None
+while robot.step(time_step) != -1:
+    start_position = gps.getValues()
+    if not any(map(lambda x: x != x, start_position)):  # Verifica se não há 'NaN' nos valores
+        break
+print(f"Posição inicial capturada: {start_position}")
 
 # PID constants
 Kp = 80  # Proportional gain
@@ -35,7 +46,9 @@ Kd = 2  # Derivative gain
 
 # PID variables
 integral = 0
+minimum_run_time = 5.0  # Tempo mínimo antes de verificar retorno à posição inicial (em segundos)
 previous_error = 0
+start_time = robot.getTime()  # Captura o tempo inicial
 
 MAX_SPEED = 6.28
 
@@ -46,9 +59,15 @@ if write_data:
         with open(filename, 'w', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow(['timestamp', 'erro'])
+            
+# Função para calcular distância euclidiana entre duas posições
+def calculate_distance(pos1, pos2):
+    return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2) ** 0.5
 
 
 while robot.step(time_step) != -1:
+
+    position = gps.getValues()  # Captura a posição atual do robô
     sensor_values = [sensor.getValue() for sensor in ir_sensors]
     
     normalized_values = [(0 if value < 500 else 1) for value in sensor_values] 
@@ -84,7 +103,7 @@ while robot.step(time_step) != -1:
     left_motor.setVelocity(left_speed)
     right_motor.setVelocity(right_speed)
 
-    finished = robot.getTime() >= 85.7280
+    #finished = robot.getTime() >= 97.7280
 
     if write_data:
         timestamp = robot.getTime()
@@ -92,5 +111,15 @@ while robot.step(time_step) != -1:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow([timestamp, error])
     
-    if finished:
-        sys.exit(0)
+    # Verifica se a posição atual é próxima à posição inicial
+    # Apenas realiza a verificação após o tempo mínimo de execução
+    current_time = robot.getTime()
+    distance_to_start = calculate_distance(position, start_position)
+
+    print(f"Tempo: {current_time:.2f}s | Distância até a posição inicial: {distance_to_start:.4f}")
+
+    if current_time - start_time > minimum_run_time and distance_to_start < 0.05:  # Tolerância ajustada
+        left_motor.setVelocity(0.0)
+        right_motor.setVelocity(0.0)
+        print("O robô retornou à posição inicial. Volta completa!")
+        break

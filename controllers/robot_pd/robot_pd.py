@@ -29,13 +29,24 @@ for name in sensor_names:
     ir_sensors.append(sensor)
 
 gps = robot.getDevice("gps")
+gps.enable(time_step)
+
+# Aguarda até que o GPS forneça uma posição inicial válida
+start_position = None
+while robot.step(time_step) != -1:
+    start_position = gps.getValues()
+    if not any(map(lambda x: x != x, start_position)):  # Verifica se não há 'NaN' nos valores
+        break
+print(f"Posição inicial capturada: {start_position}")
 
 # Constantes do controlador PD
-Kp = 100 # Ganho proporcional
+Kp = 100  # Ganho proporcional
 Kd = 2    # Ganho derivativo
 
 # Variáveis do controlador
 previous_error = 0  # Para calcular o termo derivativo
+minimum_run_time = 5.0  # Tempo mínimo antes de verificar retorno à posição inicial (em segundos)
+start_time = robot.getTime()  # Captura o tempo inicial
 
 # Velocidade máxima
 MAX_SPEED = 6.28
@@ -48,12 +59,15 @@ if write_data:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow(['timestamp', 'erro'])
 
+# Função para calcular distância euclidiana entre duas posições
+def calculate_distance(pos1, pos2):
+    return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2) ** 0.5
+
 # Loop principal
 while robot.step(time_step) != -1:
 
     # Leitura dos sensores e normalização
-    gps.enable(time_step)
-    position = gps.getValues()
+    position = gps.getValues()  # Captura a posição atual do robô
     sensor_values = [sensor.getValue() for sensor in ir_sensors]
     normalized_values = [(0 if value < 500 else 1) for value in sensor_values]
 
@@ -68,16 +82,15 @@ while robot.step(time_step) != -1:
         error = previous_error  # Preserva o erro anterior
 
     # Controle PD
-    # Aqui é necessário dividir pela diferença de tempo (time_step) para a derivada
     derivative = (error - previous_error) / (time_step / 1000.0)  # tempo em segundos
     correction = Kp * error + Kd * derivative
     previous_error = error  # Atualiza para a próxima iteração
 
     if not suppress_print:
-        print("-"*50)
+        print("-" * 50)
         print("error = ", error)
         print("correction = ", correction)
-        print("*="*50)
+        print("*=" * 50)
         print("time = ", robot.getTime())
 
     # Calcula a velocidade das rodas com base na correção
@@ -95,10 +108,16 @@ while robot.step(time_step) != -1:
         with open(filename, 'a', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
             csv_writer.writerow([timestamp, error])
-    
-    if round(position[0],2) == round(-0.899227,2) and round(position[1],2) == round(0.00317222,2):
+
+    # Verifica se a posição atual é próxima à posição inicial
+    # Apenas realiza a verificação após o tempo mínimo de execução
+    current_time = robot.getTime()
+    distance_to_start = calculate_distance(position, start_position)
+
+    print(f"Tempo: {current_time:.2f}s | Distância até a posição inicial: {distance_to_start:.4f}")
+
+    if current_time - start_time > minimum_run_time and distance_to_start < 0.05:  # Tolerância ajustada
         left_motor.setVelocity(0.0)
         right_motor.setVelocity(0.0)
-        print("Volta Completa")
-        sys.exit(0)
-
+        print("O robô retornou à posição inicial. Volta completa!")
+        break
